@@ -41,7 +41,7 @@ def add_request():
 
         return redirect(url_for('index'))
     
-    projects = ["BSR", "BPTP", "COIN"]
+    projects = ["Pro1", "Pro2", "Pro3"]
     return render_template('add.html', projects=projects)
 
 # Route to update an existing request
@@ -66,7 +66,7 @@ def update_request(id):
     record = c.fetchone()
     conn.close()
 
-    projects = ["BSR", "BPTP", "COIN"]
+    projects = ["Pro1", "Pro2", "Pro3"]
     return render_template('update.html', record=record, projects=projects)
 
 # Route to delete a request
