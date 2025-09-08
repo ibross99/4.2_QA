@@ -8,8 +8,8 @@ pipeline {
     stages {
         stage("Cleanup") {
             steps {
-                sh 'docker rm -f $(docker ps -a -q --filter "label=app=ibrahim") || true'
-                sh 'docker rmi -f $(docker images -q --filter "label=app=ibrahim") || true'
+                sh 'docker rm -f $(docker ps -a -q --filter "label=app=ibrahim161616") || true'
+                sh 'docker rmi -f $(docker images -q --filter "label=app=ibrahim161616") || true'
             }
         }
         stage("Build Docker Image") {
