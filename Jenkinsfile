@@ -14,7 +14,7 @@ pipeline {
         }
         stage("Build Docker Image") {
             steps {
-                sh 'docker build -t ibrahim/activity4:app -f Dockerfile .'
+                sh 'docker build -t ibrahim161616/activity4:app -f Dockerfile .'
             }
         }
         stage("Push Image to Docker Hub") {
