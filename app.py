@@ -1,31 +1,44 @@
-from flask import Flask, render_template, request, redirect, url_for
+# app.py
+
 import sqlite3
+from flask import Flask, render_template, request, redirect, url_for, g
 
 app = Flask(__name__)
+app.config['DATABASE'] = 'project_requests.db'
 
-# Initialize and create the database if it doesn't exist
-def init_db():
-    conn = sqlite3.connect('project_requests.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS requests
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                 name TEXT NOT NULL,
-                 reason TEXT NOT NULL,
-                 project TEXT NOT NULL)''')
-    conn.commit()
-    conn.close()
+# --- Database Connection Handling ---
 
-# Route to show the list of all entries
+def get_db():
+    """
+    Opens a new database connection if there is none yet for the
+    current application context.
+    """
+    if 'db' not in g:
+        g.db = sqlite3.connect(
+            app.config['DATABASE'],
+            detect_types=sqlite3.PARSE_DECLTYPES
+        )
+        # Return rows as dictionaries
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
+@app.teardown_appcontext
+def close_db(e=None):
+    """
+    Closes the database again at the end of the request.
+    """
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
+
+# --- Routes ---
+
 @app.route('/')
 def index():
-    conn = sqlite3.connect('project_requests.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM requests")
-    records = c.fetchall()
-    conn.close()
+    db = get_db()
+    records = db.execute("SELECT * FROM requests").fetchall()
     return render_template('index.html', records=records)
 
-# Route to add a new request
 @app.route('/add', methods=['GET', 'POST'])
 def add_request():
     if request.method == 'POST':
@@ -33,53 +46,43 @@ def add_request():
         reason = request.form['reason']
         project = request.form['project']
         
-        conn = sqlite3.connect('project_requests.db')
-        c = conn.cursor()
-        c.execute("INSERT INTO requests (name, reason, project) VALUES (?, ?, ?)", (name, reason, project))
-        conn.commit()
-        conn.close()
-
+        db = get_db()
+        db.execute(
+            "INSERT INTO requests (name, reason, project) VALUES (?, ?, ?)",
+            (name, reason, project)
+        )
+        db.commit()
         return redirect(url_for('index'))
     
     projects = ["Pro1", "Pro2", "Pro3"]
     return render_template('add.html', projects=projects)
 
-# Route to update an existing request
 @app.route('/update/<int:id>', methods=['GET', 'POST'])
 def update_request(id):
-    conn = sqlite3.connect('project_requests.db')
-    c = conn.cursor()
-
+    db = get_db()
     if request.method == 'POST':
         name = request.form['name']
         reason = request.form['reason']
         project = request.form['project']
         
-        c.execute("UPDATE requests SET name = ?, reason = ?, project = ? WHERE id = ?", (name, reason, project, id))
-        conn.commit()
-        conn.close()
-
+        db.execute(
+            "UPDATE requests SET name = ?, reason = ?, project = ? WHERE id = ?",
+            (name, reason, project, id)
+        )
+        db.commit()
         return redirect(url_for('index'))
     
     # Fetch the current record to prepopulate the form
-    c.execute("SELECT * FROM requests WHERE id = ?", (id,))
-    record = c.fetchone()
-    conn.close()
-
+    record = db.execute("SELECT * FROM requests WHERE id = ?", (id,)).fetchone()
     projects = ["Pro1", "Pro2", "Pro3"]
     return render_template('update.html', record=record, projects=projects)
 
-# Route to delete a request
 @app.route('/delete/<int:id>', methods=['GET', 'POST'])
 def delete_request(id):
-    conn = sqlite3.connect('project_requests.db')
-    c = conn.cursor()
-    c.execute("DELETE FROM requests WHERE id = ?", (id,))
-    conn.commit()
-    conn.close()
-    
+    db = get_db()
+    db.execute("DELETE FROM requests WHERE id = ?", (id,))
+    db.commit()
     return redirect(url_for('index'))
 
-if __name__ == '__main__':
-    init_db()
-    app.run(host='0.0.0.0', port=5500, debug =True)
+# NOTE: The if __name__ == '__main__' block has been removed.
+# A production WSGI server like Gunicorn will be used to run the app.
