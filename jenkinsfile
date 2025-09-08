@@ -8,13 +8,13 @@ pipeline {
     stages {
         stage("Cleanup") {
             steps {
-                sh 'docker rm -f $(docker ps -a -q --filter "label=app=Ibrahim") || true'
-                sh 'docker rmi -f $(docker images -q --filter "label=app=Ibrahim") || true'
+                sh 'docker rm -f $(docker ps -a -q --filter "label=app=ibrahim") || true'
+                sh 'docker rmi -f $(docker images -q --filter "label=app=ibrahim") || true'
             }
         }
         stage("Build Docker Image") {
             steps {
-                sh 'docker build -t Ibrahim/activity4:app -f Dockerfile .'
+                sh 'docker build -t ibrahim/activity4:app -f Dockerfile .'
             }
         }
         stage("Push Image to Docker Hub") {
@@ -22,8 +22,8 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                     sh '''
                     echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-                    docker push docker.io/Ibrahim/activity4:app
-                    docker push docker.io/Ibrahim/activity4:appv2
+                    docker push docker.io/ibrahim/activity4:app
+                    docker push docker.io/ibrahim/activity4:appv2
                     '''
                 }
             }
