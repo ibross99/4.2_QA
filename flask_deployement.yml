@@ -19,6 +19,6 @@ spec:
     spec:
       containers:
       - name: flask-app
-        image: Ibrahim/activity4:app
+        image: ibrahim161616/activity4:app
         ports:
         - containerPort: 5500
