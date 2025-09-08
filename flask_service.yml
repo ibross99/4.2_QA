@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-service
+  namespace: jenkins
+spec:
+  type: ClusterIP  
+  selector:
+    app: flask
+  ports:
+  - protocol: TCP
+    port: 5500
+    targetPort: 5500

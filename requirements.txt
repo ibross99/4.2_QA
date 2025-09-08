@@ -1,0 +1,4 @@
+flask
+Werkzeug
+flask_sqlalchemy
+Flask_Testing
