@@ -22,8 +22,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                     sh '''
                     echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-                    docker push docker.io/ibrahim/activity4:app
-                    docker push docker.io/ibrahim/activity4:appv2
+                    docker push ibrahim161616/activity4:app
                     '''
                 }
             }
