@@ -4,32 +4,30 @@ import sqlite3
 from flask import Flask, render_template, request, redirect, url_for, g
 
 app = Flask(__name__)
-app.config['DATABASE'] = 'project_requests.db'
-
-# --- Database Connection Handling ---
+DATABASE = 'project_requests.db'
 
 def get_db():
-    """
-    Opens a new database connection if there is none yet for the
-    current application context.
-    """
-    if 'db' not in g:
-        g.db = sqlite3.connect(
-            app.config['DATABASE'],
-            detect_types=sqlite3.PARSE_DECLTYPES
-        )
-        # Return rows as dictionaries
-        g.db.row_factory = sqlite3.Row
-    return g.db
+    """Opens a new database connection for the current request."""
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+        db.row_factory = sqlite3.Row # Allows accessing columns by name
+    return db
 
 @app.teardown_appcontext
-def close_db(e=None):
-    """
-    Closes the database again at the end of the request.
-    """
-    db = g.pop('db', None)
+def close_connection(exception):
+    """Closes the database at the end of the request."""
+    db = getattr(g, '_database', None)
     if db is not None:
         db.close()
+
+def init_db():
+    """Initializes the database and creates the table if it doesn't exist."""
+    with app.app_context():
+        db = get_db()
+        with open('schema.sql', mode='r') as f:
+            db.cursor().executescript(f.read())
+        db.commit()
 
 # --- Routes ---
 
@@ -72,7 +70,6 @@ def update_request(id):
         db.commit()
         return redirect(url_for('index'))
     
-    # Fetch the current record to prepopulate the form
     record = db.execute("SELECT * FROM requests WHERE id = ?", (id,)).fetchone()
     projects = ["Pro1", "Pro2", "Pro3"]
     return render_template('update.html', record=record, projects=projects)
@@ -84,5 +81,9 @@ def delete_request(id):
     db.commit()
     return redirect(url_for('index'))
 
-# NOTE: The if __name__ == '__main__' block has been removed.
-# A production WSGI server like Gunicorn will be used to run the app.
+# --- Main execution block to run the development server ---
+if __name__ == '__main__':
+    # Initialize the database when the app starts
+    init_db()
+    # Run the Flask development server
+    app.run(host='0.0.0.0', port=5500, debug=True)
